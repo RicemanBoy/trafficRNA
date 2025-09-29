@@ -11,8 +11,8 @@ import matplotlib.pyplot as plt
 from IPython.display import clear_output
 
 # High-resolution display for figures
-matplotlib.rcParams['figure.dpi']       = 200
-matplotlib.rcParams['figure.figsize']   = (3, 2)
+matplotlib.rcParams['figure.dpi']       = 100
+#matplotlib.rcParams['figure.figsize']   = (6, 4)
 
 # Automatically use tight layout for all figures
 matplotlib.rcParams['figure.constrained_layout.use'] = True
