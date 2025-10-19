@@ -43,7 +43,7 @@ class gene:
             if self.track[pos+1] == "methyl":
                 count += 1
         if self.methyl == 1:
-            self.meth_p[pos] = self.meth_p[pos]*(1+0.1*count)
+            self.meth_p[pos] = self.meth_p[pos]*(1+0.00002*count)
 
     def methyl_turn(self, click: bool):
         if click:
