@@ -1,18 +1,23 @@
 #new file based on the new concept, what Lizanza and me discussed
 
 import numpy as np
+from string import ascii_letters
 
 class gene:
-    def __init__(self, length: int, boxes: list, tf_probs: list, m_probs: list):
-        self.boxes = boxes                                  #define the boxes for the transcription factors
-        self.L = length
+    def __init__(self, length: int, tf_probs: float, m_probs: float):
+        assert length in range(52), "Exception message raised because parameter 'length' is larger than 51!"
+        self.boxes = [ascii_letters[i] for i in range(length)]        #define the boxes for the transcription factors
+        self.L = length                                                 #each box has its own TF
 
         self.time = 0
 
         self.methyl = 0                 #0 = neighbours dont affect p_m, 1 = neighbours DO affect p_m
 
-        self.box_p = tf_probs               #probabilities for tf to dock (and undock)
-        self.meth_p = m_probs               #probability for methylization of the boxes (and also unmethylization)
+        #self.box_p = np.random.rand(length)*tf_probs        #probabilities for tf to dock (and undock)
+        #self.meth_p = np.random.rand(length)*m_probs        #probability for methylization of the boxes (and also unmethylization)
+
+        self.box_p = np.ones((length,))*tf_probs        #probabilities for tf to dock (and undock)
+        self.meth_p = np.ones((length,))*m_probs        #probability for methylization of the boxes (and also unmethylization)
 
         self.production = []            #tracks how much protein is produced each step
 
@@ -43,7 +48,7 @@ class gene:
             if self.track[pos+1] == "methyl":
                 count += 1
         if self.methyl == 1:
-            self.meth_p[pos] = self.meth_p[pos]*(1+0.00002*count)
+            self.meth_p[pos] = self.meth_p[pos]*(1+0.2*count)
 
     def methyl_turn(self, click: bool):
         if click:
@@ -107,13 +112,13 @@ class simulation:
             gene2.time += 1
             
         
-    def average(self, length: int, boxes: list, tf_probs: list, m_probs: list, shots: int, m_switch = True):              #run the simulation #shots times and return the avg/std
+    def average(self, length: int, tf_probs: float, m_probs: float, shots: int, m_switch = True):              #run the simulation #shots times and return the avg/std
         avg1, avg2, std1, std2 = [],[],[],[]
         avg_corr = np.array([[0,0],[0,0]])
         total1, total2 = np.array([0 for i in range(self.timesteps)]), np.array([0 for i in range(self.timesteps)])
 
         for z in range(shots):
-            gene1, gene2 = gene(length, boxes, tf_probs, m_probs), gene(length, boxes, tf_probs, m_probs)
+            gene1, gene2 = gene(length, tf_probs, m_probs), gene(length, tf_probs, m_probs)
             if m_switch:                    #decide if neighbours affect methlylzation
                 gene1.methyl = 1
                 gene2.methyl = 1
