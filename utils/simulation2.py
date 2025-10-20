@@ -19,6 +19,8 @@ class gene:
         self.box_p = np.ones((length,))*tf_probs        #probabilities for tf to dock (and undock)
         self.meth_p = np.ones((length,))*m_probs        #probability for methylization of the boxes (and also unmethylization)
 
+        self.meth_p_orig = np.ones((length,))*m_probs         #backup of the original_values
+
         self.production = []            #tracks how much protein is produced each step
 
         self.track = [0 for i in range(length)]    #tracks which boxes are occupied
@@ -48,7 +50,7 @@ class gene:
             if self.track[pos+1] == "methyl":
                 count += 1
         if self.methyl == 1:
-            self.meth_p[pos] = self.meth_p[pos]*(1+0.2*count)
+            self.meth_p[pos] = self.meth_p_orig[pos]*(1+count)
 
     def methyl_turn(self, click: bool):
         if click:
