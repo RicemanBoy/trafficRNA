@@ -1,12 +1,14 @@
 #new file based on the new concept, what Lizanza and me discussed
 
 import numpy as np
-from string import ascii_letters
+import regex
+
+letters = ''.join(regex.findall(r'\p{L}', ''.join(chr(i) for i in range(0x110000))))
 
 class gene:
     def __init__(self, length: int, tf_probs: float, m_probs: float):
-        assert length in range(52), "Exception message raised because parameter 'length' is larger than 51!"
-        self.boxes = [ascii_letters[i] for i in range(length)]        #define the boxes for the transcription factors
+        assert length in range(141028), "Exception message raised because parameter 'length' is larger than 51!"
+        self.boxes = [letters[i] for i in range(length)]        #define the boxes for the transcription factors
         self.L = length                                                 #each box has its own TF
 
         self.time = 0
@@ -116,7 +118,7 @@ class simulation:
         
     def average(self, length: int, tf_probs: float, m_probs: float, shots: int, m_switch = True):              #run the simulation #shots times and return the avg/std
         avg1, avg2, std1, std2 = [],[],[],[]
-        avg_corr = np.array([[0,0],[0,0]])
+        avg_corr = 0
         total1, total2 = np.array([0 for i in range(self.timesteps)]), np.array([0 for i in range(self.timesteps)])
 
         for z in range(shots):
@@ -129,7 +131,7 @@ class simulation:
             total1 = np.vstack((total1, gene1.production))
             total2 = np.vstack((total2, gene2.production))
 
-            avg_corr = avg_corr + np.corrcoef(gene1.production, gene2.production)
+            avg_corr = avg_corr + np.corrcoef(gene1.production, gene2.production)[0][1]
         total1 = np.delete(total1, (0), axis=0)
         total2 = np.delete(total2, (0), axis=0)
         for i in total1.T:
