@@ -130,8 +130,9 @@ class simulation:
 
             total1 = np.vstack((total1, gene1.production))
             total2 = np.vstack((total2, gene2.production))
-            
-            avg_corr = avg_corr + np.corrcoef(gene1.production, gene2.production)[0][1]
+
+            if z < 100:
+                avg_corr = avg_corr + np.corrcoef(gene1.production, gene2.production)[0][1]
         total1 = np.delete(total1, (0), axis=0)
         total2 = np.delete(total2, (0), axis=0)
         for i in total1.T:
