@@ -40,19 +40,20 @@ class gene:
 
     def neighbour(self, pos: int):      #return how many neighbours are methylated (0-2)
         count = 0
-        if pos == 0:
-            if self.track[1] == "methyl":
-                count += 1
-        elif pos == self.L - 1:
-            if self.track[self.L-2] == "methyl":
-                count += 1
-        else:
-            if self.track[pos-1] == "methyl":
-                count += 1
-            if self.track[pos+1] == "methyl":
-                count += 1
-        if self.methyl == 1:
-            self.meth_p[pos] = self.meth_p_orig[pos]*(1+count)
+        if self.L > 1:
+            if pos == 0:
+                if self.track[1] == "methyl":
+                    count += 1
+            elif pos == self.L - 1:
+                if self.track[self.L-2] == "methyl":
+                    count += 1
+            else:
+                if self.track[pos-1] == "methyl":
+                    count += 1
+                if self.track[pos+1] == "methyl":
+                    count += 1
+            if self.methyl == 1:
+                self.meth_p[pos] = self.meth_p_orig[pos]*(1+count)
 
     def methyl_turn(self, click: bool):
         if click:
