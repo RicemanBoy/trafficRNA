@@ -6,7 +6,7 @@ import regex
 letters = ''.join(regex.findall(r'\p{L}', ''.join(chr(i) for i in range(0x110000))))
 
 class gene:
-    def __init__(self, length: int, tf_probs: float, m_probs: float):
+    def __init__(self, length: int, tf_probs: float, m_on: float, m_off: float):
         assert length in range(141028), "Exception message raised because parameter 'length' is larger than 51!"
         self.boxes = [letters[i] for i in range(length)]        #define the boxes for the transcription factors
         self.L = length                                                 #each box has its own TF
@@ -19,41 +19,41 @@ class gene:
         #self.meth_p = np.random.rand(length)*m_probs        #probability for methylization of the boxes (and also unmethylization)
 
         self.box_p = np.ones((length,))*tf_probs        #probabilities for tf to dock (and undock)
-        self.meth_p = np.ones((length,))*m_probs        #probability for methylization of the boxes (and also unmethylization)
+        self.meth_p = m_on        #probability for methylization of the boxes (and also unmethylization)
 
-        self.meth_p_orig = np.ones((length,))*m_probs         #backup of the original_values
+        self.meth_off = m_off           #probability for methylazation to go away
+
+        self.meth_p_orig = m_on         #backup of the original_values
 
         self.production = []            #tracks how much protein is produced each step
 
         self.track = [0 for i in range(length)]    #tracks which boxes are occupied
 
     def count_TF(self):                #counts how many boxes are filled with TFs
-        occupied = 0
-        for i in self.track:
-            if i != 0 and i != "methyl":
-                occupied += 1
+        occupied = sum(1 for i in self.track if i != "methyl" and i != 0)
         return occupied
     
     def protein(self):              #returns the amount of protein in this timestep
         filled = self.count_TF()
         return filled
 
-    def neighbour(self, pos: int):      #return how many neighbours are methylated (0-2)
-        count = 0
-        if self.L > 1:
-            if pos == 0:
-                if self.track[1] == "methyl":
-                    count += 1
-            elif pos == self.L - 1:
-                if self.track[self.L-2] == "methyl":
-                    count += 1
-            else:
-                if self.track[pos-1] == "methyl":
-                    count += 1
-                if self.track[pos+1] == "methyl":
-                    count += 1
-            if self.methyl == 1:
-                self.meth_p[pos] = self.meth_p_orig[pos]*(1+count)
+    def neighbour(self, pos: int):      #return how many sites are methylated
+        count = self.track.count("methly")
+        self.meth_p = self.meth_p_orig*(1+0.1*count)
+        # if self.L > 1:
+        #     if pos == 0:
+        #         if self.track[1] == "methyl":
+        #             count += 1
+        #     elif pos == self.L - 1:
+        #         if self.track[self.L-2] == "methyl":
+        #             count += 1
+        #     else:
+        #         if self.track[pos-1] == "methyl":
+        #             count += 1
+        #         if self.track[pos+1] == "methyl":
+        #             count += 1
+        #     if self.methyl == 1:
+        #         self.meth_p[pos] = self.meth_p_orig[pos]*(1+count)
 
     def methyl_turn(self, click: bool):
         if click:
@@ -71,16 +71,16 @@ class gene:
             if self.track[pos] == 0 and random <= self.box_p[pos]:          #0 --> TF
                 self.track[pos] = self.boxes[pos]
             
-            elif self.track[pos] == 0 and random <= self.meth_p[pos]:          #0 --> Methyl
+            elif self.track[pos] == 0 and random <= self.meth_p:          #0 --> Methyl
                 self.track[pos] = "methyl"
 
             elif self.track[pos] == self.boxes[pos] and random <= self.box_p[pos]:          #TF --> 0
                 self.track[pos] = 0
             
-            elif self.track[pos] == "methyl" and random <= self.meth_p[pos]:         #Methyl --> 0
+            elif self.track[pos] == "methyl" and random <= self.meth_off:         #Methyl --> 0
                 self.track[pos] = 0
         else:
-            if self.track[pos] == 0 and random <= self.meth_p[pos]:          #0 --> Methyl
+            if self.track[pos] == 0 and random <= self.meth_p:          #0 --> Methyl
                 self.track[pos] = "methyl"
             
             elif self.track[pos] == 0 and random <= self.box_p[pos]:          #0 --> TF
@@ -89,7 +89,7 @@ class gene:
             elif self.track[pos] == self.boxes[pos] and random <= self.box_p[pos]:          #TF --> 0
                 self.track[pos] = 0
             
-            elif self.track[pos] == "methyl" and random <= self.meth_p[pos]:         #Methyl --> 0
+            elif self.track[pos] == "methyl" and random <= self.meth_off:         #Methyl --> 0
                 self.track[pos] = 0
 
         for i in range(self.L):         #update p_m based on neighbours
@@ -117,13 +117,13 @@ class simulation:
             gene2.time += 1
             
         
-    def average(self, length: int, tf_probs: float, m_probs: float, shots: int, m_switch = True):              #run the simulation #shots times and return the avg/std
+    def average(self, length: int, tf_probs: float, m_on: float, m_off: float, shots: int, m_switch = True):              #run the simulation #shots times and return the avg/std
         avg1, avg2, std1, std2 = [],[],[],[]
-        avg_corr = 0
+        corr = []
         total1, total2 = np.array([0 for i in range(self.timesteps)]), np.array([0 for i in range(self.timesteps)])
 
         for z in range(shots):
-            gene1, gene2 = gene(length, tf_probs, m_probs), gene(length, tf_probs, m_probs)
+            gene1, gene2 = gene(length, tf_probs, m_on, m_off), gene(length, tf_probs, m_on, m_off)
             if m_switch:                    #decide if neighbours affect methlylzation
                 gene1.methyl = 1
                 gene2.methyl = 1
@@ -133,7 +133,7 @@ class simulation:
             total2 = np.vstack((total2, gene2.production))
 
             if z < 100:
-                avg_corr = avg_corr + np.corrcoef(gene1.production, gene2.production)[0][1]
+                corr.append(np.corrcoef(gene1.production, gene2.production)[0][1])
         total1 = np.delete(total1, (0), axis=0)
         total2 = np.delete(total2, (0), axis=0)
         for i in total1.T:
@@ -142,9 +142,8 @@ class simulation:
         for i in total2.T:
             avg2.append(np.mean(i))
             std2.append(np.std(i))
-        avg_corr = avg_corr/shots
 
-        return avg1, std1, avg2, std2, avg_corr
+        return avg1, std1, avg2, std2, corr
 
     
 
