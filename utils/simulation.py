@@ -40,7 +40,7 @@ class gene:
     def dyn_methy(self):                #change m_on based on the total methylation
         if self.methyl == 1:
             count = self.track.count("methyl")
-            self.meth_p = self.meth_p_orig*(1+1*count)
+            self.meth_p = self.meth_p_orig*(1+0.2*count)
         # if self.L > 1:
         #     if pos == 0:
         #         if self.track[1] == "methyl":
@@ -132,8 +132,8 @@ class simulation:
             total1 = np.vstack((total1, gene1.production))
             total2 = np.vstack((total2, gene2.production))
 
-            if z > 200:
-                corr.append(np.corrcoef(gene1.production, gene2.production)[0][1])
+            corr.append(np.corrcoef(gene1.production[200:], gene2.production[200:])[0][1])
+
         total1 = np.delete(total1, (0), axis=0)
         total2 = np.delete(total2, (0), axis=0)
         for i in total1.T:
