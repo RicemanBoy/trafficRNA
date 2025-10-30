@@ -40,7 +40,7 @@ class gene:
     def dyn_methy(self):                #change m_on based on the total methylation
         if self.methyl == 1:
             count = self.track.count("methyl")
-            self.meth_p = self.meth_p_orig*(1+0.2*count)
+            self.meth_p = self.meth_p_orig*(1+(2/self.L)*count)
         # if self.L > 1:
         #     if pos == 0:
         #         if self.track[1] == "methyl":
