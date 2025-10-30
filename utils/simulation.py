@@ -37,9 +37,10 @@ class gene:
         filled = self.count_TF()
         return filled
 
-    def neighbour(self, pos: int):      #return how many sites are methylated
-        count = self.track.count("methly")
-        self.meth_p = self.meth_p_orig*(1+0.1*count)
+    def dyn_methy(self):                #change m_on based on the total methylation
+        if self.methyl == 1:
+            count = self.track.count("methly")
+            self.meth_p = self.meth_p_orig*(1+0.1*count)
         # if self.L > 1:
         #     if pos == 0:
         #         if self.track[1] == "methyl":
@@ -55,7 +56,7 @@ class gene:
         #     if self.methyl == 1:
         #         self.meth_p[pos] = self.meth_p_orig[pos]*(1+count)
 
-    def methyl_turn(self, click: bool):
+    def methyl_turn(self, click: bool):         #turn on/off dyn. methylation
         if click:
             self.methyl = 1
         else:
@@ -64,36 +65,35 @@ class gene:
 
     def update(self, pos: int):
 
-        random = np.random.rand()
+        random1, random2 = np.random.rand(), np.random.rand()
         rand_upd = np.random.rand()
 
         if rand_upd <= 0.5:     #Randomize if first check for TF OR Methyl
-            if self.track[pos] == 0 and random <= self.box_p[pos]:          #0 --> TF
+            if self.track[pos] == 0 and random1 <= self.box_p[pos]:          #0 --> TF
                 self.track[pos] = self.boxes[pos]
             
-            elif self.track[pos] == 0 and random <= self.meth_p:          #0 --> Methyl
+            elif self.track[pos] == 0 and random2 <= self.meth_p:          #0 --> Methyl
                 self.track[pos] = "methyl"
 
-            elif self.track[pos] == self.boxes[pos] and random <= self.box_p[pos]:          #TF --> 0
+            elif self.track[pos] == self.boxes[pos] and random1 <= self.box_p[pos]:          #TF --> 0
                 self.track[pos] = 0
             
-            elif self.track[pos] == "methyl" and random <= self.meth_off:         #Methyl --> 0
+            elif self.track[pos] == "methyl" and random2 <= self.meth_off:         #Methyl --> 0
                 self.track[pos] = 0
         else:
-            if self.track[pos] == 0 and random <= self.meth_p:          #0 --> Methyl
+            if self.track[pos] == 0 and random2 <= self.meth_p:          #0 --> Methyl
                 self.track[pos] = "methyl"
             
-            elif self.track[pos] == 0 and random <= self.box_p[pos]:          #0 --> TF
+            elif self.track[pos] == 0 and random1 <= self.box_p[pos]:          #0 --> TF
                 self.track[pos] = self.boxes[pos]
 
-            elif self.track[pos] == self.boxes[pos] and random <= self.box_p[pos]:          #TF --> 0
+            elif self.track[pos] == self.boxes[pos] and random1 <= self.box_p[pos]:          #TF --> 0
                 self.track[pos] = 0
             
-            elif self.track[pos] == "methyl" and random <= self.meth_off:         #Methyl --> 0
+            elif self.track[pos] == "methyl" and random2 <= self.meth_off:         #Methyl --> 0
                 self.track[pos] = 0
-
-        for i in range(self.L):         #update p_m based on neighbours
-            self.neighbour(i)
+        
+        self.dyn_methy()        #update dynamic methylation
 
 class simulation:
     def __init__(self, timesteps: int):
