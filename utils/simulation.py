@@ -40,7 +40,7 @@ class gene:
     def dyn_methy(self):                #change m_on based on the total methylation
         if self.methyl == 1:
             count = self.track.count("methyl")
-            self.meth_p = self.meth_p_orig*(1+(2/self.L)*count)
+            self.meth_p = self.meth_p_orig*(1+(1/self.L)*count)
         # if self.L > 1:
         #     if pos == 0:
         #         if self.track[1] == "methyl":
@@ -131,8 +131,20 @@ class simulation:
 
             total1 = np.vstack((total1, gene1.production))
             total2 = np.vstack((total2, gene2.production))
+            
+            rate = min(tf_probs, m_on, m_off)
+            equil = int(np.log(0.01)/np.log(1-rate))        #determine equil based on highest rate, set 0.01 as fixed, can be changed
+            try:
+                corr.append(np.corrcoef(gene1.production[equil:], gene2.production[equil:])[0][1])
+            except:
+                try:
+                    equil = int(equil/2)
+                    corr.append(np.corrcoef(gene1.production[equil:], gene2.production[equil:])[0][1])
+                except:
+                    equil = int(equil/2)
+                    corr.append(np.corrcoef(gene1.production[equil:], gene2.production[equil:])[0][1])
 
-            corr.append(np.corrcoef(gene1.production[200:], gene2.production[200:])[0][1])
+            #corr.append(np.corrcoef(gene1.production[100:], gene2.production[100:])[0][1])
 
         total1 = np.delete(total1, (0), axis=0)
         total2 = np.delete(total2, (0), axis=0)
