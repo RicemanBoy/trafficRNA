@@ -120,6 +120,12 @@ class simulation:
     def average(self, length: int, tf_probs: float, m_on: float, m_off: float, shots: int, m_switch = True):              #run the simulation #shots times and return the avg/std
         avg1, avg2, std1, std2 = [],[],[],[]
         corr = []
+
+        rate = min(tf_probs, m_on, m_off)
+        equil = int(np.log(0.01)/np.log(1-rate))   #determine equil based on highest rate, set 0.01 as fixed, can be changed
+
+        corrx = np.array([0 for i in range(int(self.timesteps-2*equil))])
+
         total1, total2 = np.array([0 for i in range(self.timesteps)]), np.array([0 for i in range(self.timesteps)])
 
         for z in range(shots):
@@ -131,21 +137,28 @@ class simulation:
 
             total1 = np.vstack((total1, gene1.production))
             total2 = np.vstack((total2, gene2.production))
-            
-            rate = min(tf_probs, m_on, m_off)
-            equil = int(np.log(0.01)/np.log(1-rate))        #determine equil based on highest rate, set 0.01 as fixed, can be changed
+      
             try:
                 corr.append(np.corrcoef(gene1.production[equil:], gene2.production[equil:])[0][1])
             except:
                 try:
-                    equil = int(equil/2)
-                    corr.append(np.corrcoef(gene1.production[equil:], gene2.production[equil:])[0][1])
+                    equil_ = int(equil/2)
+                    corr.append(np.corrcoef(gene1.production[equil_:], gene2.production[equil_:])[0][1])
                 except:
-                    equil = int(equil/2)
-                    corr.append(np.corrcoef(gene1.production[equil:], gene2.production[equil:])[0][1])
+                    equil_ = int(equil_/2)
+                    corr.append(np.corrcoef(gene1.production[equil_:], gene2.production[equil_:])[0][1])
+            
+            corr_idk = np.array([0])
+            for i in range(int(self.timesteps-2*equil)):
+                corr_piece = np.corrcoef(gene1.production[equil+i:self.timesteps-i], gene2.production[equil+i:self.timesteps-i])[0][1]
+                if np.isnan(corr_piece):
+                    corr_idk = np.append(corr_idk, 100)
+                else:
+                    corr_idk = np.append(corr_idk, corr_piece)
+            corr_idk = np.delete(corr_idk, 0)
+            corrx = np.vstack((corrx, corr_idk))
 
-            #corr.append(np.corrcoef(gene1.production[100:], gene2.production[100:])[0][1])
-
+        corrx = np.delete(corrx, (0), axis=0)
         total1 = np.delete(total1, (0), axis=0)
         total2 = np.delete(total2, (0), axis=0)
         for i in total1.T:
@@ -155,7 +168,7 @@ class simulation:
             avg2.append(np.mean(i))
             std2.append(np.std(i))
 
-        return avg1, std1, avg2, std2, corr
+        return avg1, std1, avg2, std2, corr, corrx
 
     
 
