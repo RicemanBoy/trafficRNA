@@ -141,14 +141,23 @@ class simulation:
             total2 = np.vstack((total2, gene2.production))
       
             try:
-                corr.append(np.corrcoef(gene1.production[equil:], gene2.production[equil:])[0][1])
+                if np.isnan(np.corrcoef(gene1.production[equil:], gene2.production[equil:])[0][1]):
+                    corr.append(0)
+                else:
+                    corr.append(np.corrcoef(gene1.production[equil:], gene2.production[equil:])[0][1])
             except:
                 try:
                     equil_ = int(equil/2)
-                    corr.append(np.corrcoef(gene1.production[equil_:], gene2.production[equil_:])[0][1])
+                    if np.isnan(np.corrcoef(gene1.production[equil_:], gene2.production[equil_:])[0][1]):
+                        corr.append(0)
+                    else:
+                        corr.append(np.corrcoef(gene1.production[equil_:], gene2.production[equil_:])[0][1])
                 except:
                     equil_ = int(equil_/2)
-                    corr.append(np.corrcoef(gene1.production[equil_:], gene2.production[equil_:])[0][1])
+                    if np.isnan(np.corrcoef(gene1.production[equil_:], gene2.production[equil_:])[0][1]):
+                        corr.append(0)
+                    else:
+                        corr.append(np.corrcoef(gene1.production[equil_:], gene2.production[equil_:])[0][1])
             
             corr_idk = np.array([0])
             for i in range(int(self.timesteps-(1+timewindow)*equil)):
