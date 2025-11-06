@@ -149,10 +149,18 @@ class simulation:
                     corr.append(np.corrcoef(gene1.production[equil_:], gene2.production[equil_:])[0][1])
             
             corr_idk = np.array([0])
-            for i in range(int(self.timesteps-2*equil)):
+            for i in range(int(self.timesteps-1.5*equil)):            #FIX NAN HERE BY ADDING +- 0.01 alternatively, but only on copy!
                 corr_piece = np.corrcoef(gene1.production[equil+i:int((1.5)*equil)+i], gene2.production[equil+i:int((1.5)*equil)+i])[0][1]
                 if np.isnan(corr_piece):
-                    corr_idk = np.append(corr_idk, 100)
+                    hmm1 = gene1.production[equil+i:int((1.5)*equil)+i].copy()
+                    hmm2 = gene2.production[equil+i:int((1.5)*equil)+i].copy()
+                    if all(x == hmm1[0] for x in hmm1):
+                        hmm1 = [val+0.001 if i%2==0 else val-0.001 for i,val in enumerate(hmm1)]
+                    if all(x == hmm2[0] for x in hmm2):
+                        hmm2 = [val+0.001 if i%2==0 else val-0.001 for i,val in enumerate(hmm2)]
+                    corr_piece_new = np.corrcoef(hmm1, hmm2)[0][1]
+                    corr_idk = np.append(corr_idk, corr_piece_new)
+                    # corr_idk = np.append(corr_idk, 100)
                 else:
                     corr_idk = np.append(corr_idk, corr_piece)
             corr_idk = np.delete(corr_idk, 0)
