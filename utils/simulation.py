@@ -150,7 +150,7 @@ class simulation:
             
             corr_idk = np.array([0])
             for i in range(int(self.timesteps-2*equil)):
-                corr_piece = np.corrcoef(gene1.production[equil+i:2*equil+i], gene2.production[equil+i:2*equil+i])[0][1]
+                corr_piece = np.corrcoef(gene1.production[equil+i:int((1.5)*equil)+i], gene2.production[equil+i:int((1.5)*equil)+i])[0][1]
                 if np.isnan(corr_piece):
                     corr_idk = np.append(corr_idk, 100)
                 else:
