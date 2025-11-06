@@ -124,7 +124,7 @@ class simulation:
         rate = min(tf_probs, m_on, m_off)
         equil = int(np.log(0.01)/np.log(1-rate))   #determine equil based on highest rate, set 0.01 as fixed, can be changed
 
-        timewindow = 0.2            #with respect to equil
+        timewindow = 2            #with respect to equil
 
         corrx = np.array([0 for i in range(int(self.timesteps-(1+timewindow)*equil))])
 
@@ -151,17 +151,9 @@ class simulation:
                     corr.append(np.corrcoef(gene1.production[equil_:], gene2.production[equil_:])[0][1])
             
             corr_idk = np.array([0])
-            for i in range(int(self.timesteps-(1+timewindow)*equil)):            #FIX NAN HERE BY ADDING +- 0.01 alternatively, but only on copy!
+            for i in range(int(self.timesteps-(1+timewindow)*equil)):
                 corr_piece = np.corrcoef(gene1.production[equil+i:int((1+timewindow)*equil)+i], gene2.production[equil+i:int((1+timewindow)*equil)+i])[0][1]
                 if np.isnan(corr_piece):
-                    # hmm1 = gene1.production[equil+i:int((1+timewindow)*equil)+i].copy()
-                    # hmm2 = gene2.production[equil+i:int((1+timewindow)*equil)+i].copy()
-                    # if all(x == hmm1[0] for x in hmm1):
-                    #     hmm1[0] = hmm1[0]+0.01
-                    # if all(x == hmm2[0] for x in hmm2):
-                    #     hmm2[1] = hmm2[1]+0.01
-                    # corr_piece_new = np.corrcoef(hmm1, hmm2)[0][1]
-                    # corr_idk = np.append(corr_idk, corr_piece_new)
                     corr_idk = np.append(corr_idk, 0)
                 else:
                     corr_idk = np.append(corr_idk, corr_piece)
