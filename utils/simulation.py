@@ -12,11 +12,9 @@ class gene:
         self.L = length                                                 #each box has its own TF
 
         self.time = 0
-
         self.methyl = 0                 #0 = neighbours dont affect p_m, 1 = neighbours DO affect p_m
 
-        #self.box_p = np.random.rand(length)*tf_probs        #probabilities for tf to dock (and undock)
-        #self.meth_p = np.random.rand(length)*m_probs        #probability for methylization of the boxes (and also unmethylization)
+        self.k_on = tf_probs            #original value of the k_on rates
 
         self.box_p = np.ones((length,))*tf_probs        #probabilities for tf to dock (and undock)
         self.meth_p = m_on        #probability for methylization of the boxes (and also unmethylization)
@@ -100,6 +98,18 @@ class simulation:
         self.timesteps = timesteps
         self.timeline = [i for i in range(timesteps)]
 
+    def dyn_tf(self, gene1: gene, gene2: gene):
+        for i,val in enumerate(gene1.box_p):
+            if gene2.track[i] == val:
+                gene1.box_p[i] = gene1.k_on*0.5
+            else:
+                gene1.box_p[i] = gene1.k_on
+
+            if gene1.track[i] == val:
+                gene2.box_p[i] = gene2.k_on*0.5
+            else:
+                gene2.box_p[i] = gene2.k_on
+
     def run(self, gene1: gene, gene2: gene):
         all_boxes = gene1.L + gene2.L
         order = np.random.permutation(all_boxes)
@@ -113,6 +123,7 @@ class simulation:
                     gene1.update(i)
                 else:
                     gene2.update(i-len)
+            self.dyn_tf(gene1=gene1, gene2=gene2)
             gene1.time += 1
             gene2.time += 1
             
