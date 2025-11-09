@@ -15,9 +15,11 @@ class gene:
         self.methyl = 0                 #0 = neighbours dont affect p_m, 1 = neighbours DO affect p_m
 
         self.k_on = tf_probs            #original value of the k_on rates
+        self.k_off = tf_probs
 
         self.box_p = np.ones((length,))*tf_probs        #probabilities for tf to dock (and undock)
-        self.meth_p = m_on        #probability for methylization of the boxes (and also unmethylization)
+
+        self.meth_p = m_on        #probability for methylization of the boxes
 
         self.meth_off = m_off           #probability for methylazation to go away
 
@@ -73,7 +75,7 @@ class gene:
             elif self.track[pos] == 0 and random2 <= self.meth_p:          #0 --> Methyl
                 self.track[pos] = "methyl"
 
-            elif self.track[pos] == self.boxes[pos] and random3 <= self.box_p[pos]:          #TF --> 0
+            elif self.track[pos] == self.boxes[pos] and random3 <= self.k_off:          #TF --> 0
                 self.track[pos] = 0
             
             elif self.track[pos] == "methyl" and random4 <= self.meth_off:         #Methyl --> 0
@@ -85,7 +87,7 @@ class gene:
             elif self.track[pos] == 0 and random1 <= self.box_p[pos]:          #0 --> TF
                 self.track[pos] = self.boxes[pos]
 
-            elif self.track[pos] == self.boxes[pos] and random3 <= self.box_p[pos]:          #TF --> 0
+            elif self.track[pos] == self.boxes[pos] and random3 <= self.k_off:          #TF --> 0
                 self.track[pos] = 0
             
             elif self.track[pos] == "methyl" and random4 <= self.meth_off:         #Methyl --> 0
@@ -99,13 +101,13 @@ class simulation:
         self.timeline = [i for i in range(timesteps)]
 
     def dyn_tf(self, gene1: gene, gene2: gene):
-        for i,val in enumerate(gene1.box_p):
-            if gene2.track[i] == val:
+        for i in range(gene1.L):
+            if gene2.track[i] == letters[i]:
                 gene1.box_p[i] = gene1.k_on*0.5
             else:
                 gene1.box_p[i] = gene1.k_on
 
-            if gene1.track[i] == val:
+            if gene1.track[i] == letters[i]:
                 gene2.box_p[i] = gene2.k_on*0.5
             else:
                 gene2.box_p[i] = gene2.k_on
@@ -135,7 +137,7 @@ class simulation:
         rate = min(tf_probs, m_on, m_off)
         equil = int(np.log(0.01)/np.log(1-rate))   #determine equil based on highest rate, set 0.01 as fixed, can be changed
 
-        timewindow = 0.25            #with respect to equil
+        timewindow = 1            #with respect to equil
 
         corrx = np.array([0 for i in range(int(self.timesteps-(1+timewindow)*equil))])
 
