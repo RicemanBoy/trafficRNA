@@ -125,7 +125,7 @@ class simulation:
                     gene1.update(i)
                 else:
                     gene2.update(i-len)
-            #self.dyn_tf(gene1=gene1, gene2=gene2)
+            self.dyn_tf(gene1=gene1, gene2=gene2)
             gene1.time += 1
             gene2.time += 1
             
