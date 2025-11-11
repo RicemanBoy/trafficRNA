@@ -125,7 +125,7 @@ class simulation:
                     gene1.update(i)
                 else:
                     gene2.update(i-len)
-            self.dyn_tf(gene1=gene1, gene2=gene2)
+            #self.dyn_tf(gene1=gene1, gene2=gene2)
             gene1.time += 1
             gene2.time += 1
             
@@ -137,7 +137,7 @@ class simulation:
         rate = min(tf_probs, m_on, m_off)
         equil = int(np.log(0.01)/np.log(1-rate))   #determine equil based on highest rate, set 0.01 as fixed, can be changed
 
-        timewindow = 0.5            #with respect to equil
+        timewindow = 1            #with respect to equil
 
         corrx = np.array([0 for i in range(int(self.timesteps-(1+timewindow)*equil))])
 
