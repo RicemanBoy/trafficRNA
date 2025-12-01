@@ -13,6 +13,7 @@ class gene:
 
         self.time = 0
         self.methyl = 0                 #0 = neighbours dont affect p_m, 1 = neighbours DO affect p_m
+        self.tf = 0                        #0 = no dynamic k_on, 1 = dynamic k_on
 
         self.k_on = tf_probs            #original value of the k_on rates
         self.k_off = tf_probs
@@ -101,16 +102,17 @@ class simulation:
         self.timeline = [i for i in range(timesteps)]
 
     def dyn_tf(self, gene1: gene, gene2: gene):
-        for i in range(gene1.L):
-            if gene2.track[i] == letters[i]:
-                gene1.box_p[i] = gene1.k_on*0.5
-            else:
-                gene1.box_p[i] = gene1.k_on
+        if gene1.tf == 1 and gene2.tf == 1:
+            for i in range(gene1.L):
+                if gene2.track[i] == letters[i]:
+                    gene1.box_p[i] = gene1.k_on*0.5
+                else:
+                    gene1.box_p[i] = gene1.k_on
 
-            if gene1.track[i] == letters[i]:
-                gene2.box_p[i] = gene2.k_on*0.5
-            else:
-                gene2.box_p[i] = gene2.k_on
+                if gene1.track[i] == letters[i]:
+                    gene2.box_p[i] = gene2.k_on*0.5
+                else:
+                    gene2.box_p[i] = gene2.k_on
 
     def run(self, gene1: gene, gene2: gene):
         all_boxes = gene1.L + gene2.L
@@ -125,21 +127,24 @@ class simulation:
                     gene1.update(i)
                 else:
                     gene2.update(i-len)
-            self.dyn_tf(gene1=gene1, gene2=gene2)
+            self.dyn_tf(gene1=gene1, gene2=gene2)        #dynamic rates for TF, boxes are indepent of each other for now
             gene1.time += 1
             gene2.time += 1
             
         
-    def average(self, length: int, tf_probs: float, m_on: float, m_off: float, shots: int, m_switch = True):              #run the simulation #shots times and return the avg/std
+    def average(self, length: int, tf_probs: float, m_on: float, m_off: float, shots: int, m_switch = True, tf_switch = True):              #run the simulation #shots times and return the avg/std
         avg1, avg2, std1, std2 = [],[],[],[]
         corr = []
 
         rate = min(tf_probs, m_on, m_off)
-        equil = int(np.log(0.01)/np.log(1-rate))   #determine equil based on highest rate, set 0.01 as fixed, can be changed
+        equil = int(np.log(0.01)/np.log(1-rate))   #determine equil based on smallest rate, set the threshhold to reach equil 0.01 as fixed, can be changed
 
-        timewindow = 1            #with respect to equil
+        timewindow, tw1, tw2, tw3 = 0.5, 1, 2, 4            #with respect to equil
 
         corrx = np.array([0 for i in range(int(self.timesteps-(1+timewindow)*equil))])
+        corrx1 = np.array([0 for i in range(int(self.timesteps-(1+tw1)*equil))])
+        corrx2 = np.array([0 for i in range(int(self.timesteps-(1+tw2)*equil))])
+        corrx3 = np.array([0 for i in range(int(self.timesteps-(1+tw3)*equil))])
 
         total1, total2 = np.array([0 for i in range(self.timesteps)]), np.array([0 for i in range(self.timesteps)])
 
@@ -148,6 +153,9 @@ class simulation:
             if m_switch:                    #decide if neighbours affect methlylzation
                 gene1.methyl = 1
                 gene2.methyl = 1
+            if tf_switch:
+                gene1.tf = 1
+                gene2.tf = 1
             self.run(gene1, gene2)
 
             total1 = np.vstack((total1, gene1.production))
@@ -182,7 +190,37 @@ class simulation:
             corr_idk = np.delete(corr_idk, 0)
             corrx = np.vstack((corrx, corr_idk))
 
-        corrx = np.delete(corrx, (0), axis=0)
+            corr_idk = np.array([0])
+            for i in range(int(self.timesteps-(1+tw1)*equil)):
+                corr_piece = np.corrcoef(gene1.production[equil+i:int((1+tw1)*equil)+i], gene2.production[equil+i:int((1+tw1)*equil)+i])[0][1]
+                if np.isnan(corr_piece):
+                    corr_idk = np.append(corr_idk, 0)
+                else:
+                    corr_idk = np.append(corr_idk, corr_piece)
+            corr_idk = np.delete(corr_idk, 0)
+            corrx1 = np.vstack((corrx1, corr_idk))
+
+            corr_idk = np.array([0])
+            for i in range(int(self.timesteps-(1+tw2)*equil)):
+                corr_piece = np.corrcoef(gene1.production[equil+i:int((1+tw2)*equil)+i], gene2.production[equil+i:int((1+tw2)*equil)+i])[0][1]
+                if np.isnan(corr_piece):
+                    corr_idk = np.append(corr_idk, 0)
+                else:
+                    corr_idk = np.append(corr_idk, corr_piece)
+            corr_idk = np.delete(corr_idk, 0)
+            corrx2 = np.vstack((corrx2, corr_idk))
+
+            corr_idk = np.array([0])
+            for i in range(int(self.timesteps-(1+tw3)*equil)):
+                corr_piece = np.corrcoef(gene1.production[equil+i:int((1+tw3)*equil)+i], gene2.production[equil+i:int((1+tw3)*equil)+i])[0][1]
+                if np.isnan(corr_piece):
+                    corr_idk = np.append(corr_idk, 0)
+                else:
+                    corr_idk = np.append(corr_idk, corr_piece)
+            corr_idk = np.delete(corr_idk, 0)
+            corrx3 = np.vstack((corrx3, corr_idk))
+
+        corrx, corrx1, corrx2, corrx3 = np.delete(corrx, (0), axis=0), np.delete(corrx1, (0), axis=0), np.delete(corrx2, (0), axis=0), np.delete(corrx3, (0), axis=0)
         total1 = np.delete(total1, (0), axis=0)
         total2 = np.delete(total2, (0), axis=0)
         for i in total1.T:
@@ -192,7 +230,7 @@ class simulation:
             avg2.append(np.mean(i))
             std2.append(np.std(i))
 
-        return avg1, std1, avg2, std2, corr, corrx
+        return avg1, std1, avg2, std2, corr, corrx, corrx1, corrx2, corrx3
 
     
 
