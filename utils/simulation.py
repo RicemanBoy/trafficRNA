@@ -30,6 +30,22 @@ class gene:
 
         self.track = [0 for i in range(length)]    #tracks which boxes are occupied
 
+        # #TEST to reach equil faster##########
+        # for i, val in enumerate(self.track):
+        #     r, r1, r2, r3, r4 = np.random.rand(), np.random.rand(), np.random.rand(), np.random.rand(), np.random.rand()
+        #     if r < 0.5:
+        #         if r1<tf_probs:
+        #             self.track[i] = self.boxes[i]
+        #         elif r2<self.meth_p:
+        #             self.track[i] = "methyl"
+        #     else:
+        #         if r3<self.meth_p:
+        #             self.track[i] = "methyl"
+        #         elif r4<tf_probs:
+        #             self.track[i] = self.boxes[i]
+        # self.dyn_methy()
+        # ####################################
+
     def count_TF(self):                #counts how many boxes are filled with TFs
         occupied = sum(1 for i in self.track if i != "methyl" and i != 0)
         return occupied
